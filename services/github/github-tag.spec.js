@@ -1,5 +1,6 @@
 import { test, given } from 'sazerac'
 import { GithubTag } from './github-tag.service.js'
+import { expect } from 'chai'
 
 describe('GithubTag', function () {
   test(GithubTag.getLatestTag, () => {
@@ -61,5 +62,52 @@ describe('GithubTag', function () {
     given({ tags, filter: 'foo' }).expect([])
     given({ tags, filter: 'server-*' }).expect(['server-2022-01-01'])
     given({ tags, filter: '!server-*' }).expect(['v1.1.0', 'v1.2.0'])
+  })
+
+  it('should fetch tag version', async function () {
+    const service = new GithubTag()
+    const result = await service.handle({
+      user: 'badges',
+      repo: 'shields',
+    })
+    expect(result).to.have.property('message')
+  })
+
+  it('should fetch tag version with submodule', async function () {
+    const service = new GithubTag()
+    const result = await service.handle({
+      user: 'badges',
+      repo: 'shields',
+      submodule: 'test-submodule',
+    })
+    expect(result).to.have.property('message')
+    expect(result.message).to.include('test-submodule@')
+  })
+
+  it('should handle non-existent submodule', async function () {
+    const service = new GithubTag()
+    try {
+      await service.handle({
+        user: 'badges',
+        repo: 'shields',
+        submodule: 'non-existent-submodule',
+      })
+      expect.fail('Expected error was not thrown')
+    } catch (error) {
+      expect(error.message).to.equal('submodule not found')
+    }
+  })
+
+  it('should handle non-existent repository', async function () {
+    const service = new GithubTag()
+    try {
+      await service.handle({
+        user: 'non-existent-user',
+        repo: 'non-existent-repo',
+      })
+      expect.fail('Expected error was not thrown')
+    } catch (error) {
+      expect(error.message).to.equal('repo not found')
+    }
   })
 })

@@ -18,7 +18,18 @@ const schema = Joi.object({
           .items({
             node: Joi.object({
               name: Joi.string().required(),
+              target: Joi.object({
+                oid: Joi.string().required(),
+              }).required(),
             }).required(),
+          })
+          .required(),
+      }).required(),
+      submodules: Joi.object({
+        nodes: Joi.array()
+          .items({
+            name: Joi.string().required(),
+            branch: Joi.string().required(),
           })
           .required(),
       }).required(),
@@ -31,7 +42,7 @@ class GithubTag extends GithubAuthV4Service {
 
   static route = {
     base: 'github/v/tag',
-    pattern: ':user/:repo',
+    pattern: ':user/:repo/:submodule?',
     queryParamSchema,
   }
 
@@ -43,6 +54,7 @@ class GithubTag extends GithubAuthV4Service {
         parameters: [
           pathParam({ name: 'user', example: 'expressjs' }),
           pathParam({ name: 'repo', example: 'express' }),
+          pathParam({ name: 'submodule', example: 'submodule-name', required: false }),
           ...openApiQueryParams,
         ],
       },
@@ -67,7 +79,7 @@ class GithubTag extends GithubAuthV4Service {
     return matcher(tags, filter)
   }
 
-  async fetch({ user, repo, limit }) {
+  async fetch({ user, repo, submodule, limit }) {
     return this._requestGraphql({
       query: gql`
         query ($user: String!, $repo: String!, $limit: Int!) {
@@ -80,7 +92,16 @@ class GithubTag extends GithubAuthV4Service {
               edges {
                 node {
                   name
+                  target {
+                    oid
+                  }
                 }
+              }
+            }
+            submodules(first: 100) {
+              nodes {
+                name
+                branch
               }
             }
           }
@@ -99,27 +120,42 @@ class GithubTag extends GithubAuthV4Service {
     return tags[0]
   }
 
-  async handle({ user, repo }, queryParams) {
+  async handle({ user, repo, submodule }, queryParams) {
     const sort = queryParams.sort
     const includePrereleases = queryParams.include_prereleases !== undefined
     const filter = queryParams.filter
     const limit = this.constructor.getLimit({ sort, filter })
 
-    const json = await this.fetch({ user, repo, limit })
+    const json = await this.fetch({ user, repo, submodule, limit })
+    
+    // Check if submodule exists
+    if (submodule) {
+      const submodules = json.data.repository.submodules.nodes
+      const submoduleInfo = submodules.find(s => s.name === submodule)
+      if (!submoduleInfo) {
+        throw new NotFound({ prettyMessage: 'submodule not found' })
+      }
+    }
+
     const tags = this.constructor.applyFilter({
       tags: json.data.repository.refs.edges.map(edge => edge.node.name),
       filter,
     })
+    
     if (tags.length === 0) {
       const prettyMessage = filter ? 'no matching tags found' : 'no tags found'
       throw new NotFound({ prettyMessage })
     }
+
+    const version = this.constructor.getLatestTag({
+      tags,
+      sort,
+      includePrereleases,
+    })
+
     return renderVersionBadge({
-      version: this.constructor.getLatestTag({
-        tags,
-        sort,
-        includePrereleases,
-      }),
+      version,
+      tag: submodule ? `${submodule}@${version}` : version,
     })
   }
 }
@@ -129,9 +165,10 @@ const redirects = {
     category: 'version',
     route: {
       base: 'github/tag',
-      pattern: ':user/:repo',
+      pattern: ':user/:repo/:submodule?',
     },
-    transformPath: ({ user, repo }) => `/github/v/tag/${user}/${repo}`,
+    transformPath: ({ user, repo, submodule }) => 
+      `/github/v/tag/${user}/${repo}${submodule ? `/${submodule}` : ''}`,
     transformQueryParams: params => ({ sort: 'semver' }),
     dateAdded: new Date('2019-08-17'),
   }),
@@ -139,9 +176,10 @@ const redirects = {
     category: 'version',
     route: {
       base: 'github/tag-pre',
-      pattern: ':user/:repo',
+      pattern: ':user/:repo/:submodule?',
     },
-    transformPath: ({ user, repo }) => `/github/v/tag/${user}/${repo}`,
+    transformPath: ({ user, repo, submodule }) => 
+      `/github/v/tag/${user}/${repo}${submodule ? `/${submodule}` : ''}`,
     transformQueryParams: params => ({
       sort: 'semver',
       include_prereleases: null,
@@ -152,9 +190,10 @@ const redirects = {
     category: 'version',
     route: {
       base: 'github/tag-date',
-      pattern: ':user/:repo',
+      pattern: ':user/:repo/:submodule?',
     },
-    transformPath: ({ user, repo }) => `/github/v/tag/${user}/${repo}`,
+    transformPath: ({ user, repo, submodule }) => 
+      `/github/v/tag/${user}/${repo}${submodule ? `/${submodule}` : ''}`,
     dateAdded: new Date('2019-08-17'),
   }),
 }
