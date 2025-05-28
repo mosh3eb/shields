@@ -24,7 +24,7 @@ export async function fetch(url, options = {}) {
     throw new FetchError(
       `HTTP Error: ${response.status}`,
       response.status,
-      response
+      response,
     )
   }
 
@@ -35,7 +35,7 @@ export async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       ...options.headers,
     },
   })
@@ -51,4 +51,4 @@ export async function fetchText(url, options = {}) {
 export async function fetchBuffer(url, options = {}) {
   const response = await fetch(url, options)
   return response.arrayBuffer()
-} 
+}

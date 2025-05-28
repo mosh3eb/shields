@@ -136,7 +136,7 @@ export default class RosVersion extends GithubAuthV4Service {
       repoName,
     )
 
-    return { ...renderVersionBadge({ version }), label: `ros | ${distro}` }
+    return { ...renderVersionBadge({ version }), label: 'ros' }
   }
 
   static _parseReleaseVersionFromDistro(distroYaml, repoName) {

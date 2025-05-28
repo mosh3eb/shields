@@ -8,6 +8,7 @@ import {
   isIntegerPercentage,
   isMetric,
 } from '../test-validators.js'
+
 export const t = new ServiceTester({
   id: 'SonarTests',
   title: 'SonarTests',
@@ -25,16 +26,67 @@ const isMetricAllowZero = Joi.alternatives(
 // for other service tests.
 
 t.create('Tests')
-  .timeout(10000)
   .get('/tests/WebExtensions.Net.json?server=https://sonarcloud.io')
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'WebExtensions.Net',
+        metricKeys: 'tests,test_failures,skipped_tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'tests',
+              value: '71',
+            },
+            {
+              metric: 'test_failures',
+              value: '2',
+            },
+            {
+              metric: 'skipped_tests',
+              value: '1',
+            },
+          ],
+        },
+      }),
+  )
   .expectBadge({
     label: 'tests',
     message: isDefaultTestTotals,
   })
 
 t.create('Tests (branch)')
-  .timeout(10000)
   .get('/tests/WebExtensions.Net/main.json?server=https://sonarcloud.io')
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'WebExtensions.Net',
+        branch: 'main',
+        metricKeys: 'tests,test_failures,skipped_tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'tests',
+              value: '71',
+            },
+            {
+              metric: 'test_failures',
+              value: '2',
+            },
+            {
+              metric: 'skipped_tests',
+              value: '1',
+            },
+          ],
+        },
+      }),
+  )
   .expectBadge({
     label: 'tests',
     message: isDefaultTestTotals,
@@ -78,17 +130,41 @@ t.create('Tests (legacy API supported)')
   })
 
 t.create('Tests with compact message')
-  .timeout(10000)
   .get('/tests/WebExtensions.Net.json', {
     qs: {
       compact_message: null,
       server: 'https://sonarcloud.io',
     },
   })
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'WebExtensions.Net',
+        metricKeys: 'tests,test_failures,skipped_tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'tests',
+              value: '71',
+            },
+            {
+              metric: 'test_failures',
+              value: '2',
+            },
+            {
+              metric: 'skipped_tests',
+              value: '1',
+            },
+          ],
+        },
+      }),
+  )
   .expectBadge({ label: 'tests', message: isDefaultCompactTestTotals })
 
 t.create('Tests with custom labels')
-  .timeout(10000)
   .get('/tests/WebExtensions.Net.json', {
     qs: {
       server: 'https://sonarcloud.io',
@@ -97,10 +173,35 @@ t.create('Tests with custom labels')
       skipped_label: 'n/a',
     },
   })
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'WebExtensions.Net',
+        metricKeys: 'tests,test_failures,skipped_tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'tests',
+              value: '71',
+            },
+            {
+              metric: 'test_failures',
+              value: '2',
+            },
+            {
+              metric: 'skipped_tests',
+              value: '1',
+            },
+          ],
+        },
+      }),
+  )
   .expectBadge({ label: 'tests', message: isCustomTestTotals })
 
 t.create('Tests with compact message and custom labels')
-  .timeout(10000)
   .get('/tests/WebExtensions.Net.json', {
     qs: {
       server: 'https://sonarcloud.io',
@@ -110,15 +211,58 @@ t.create('Tests with compact message and custom labels')
       skipped_label: '🤷',
     },
   })
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'WebExtensions.Net',
+        metricKeys: 'tests,test_failures,skipped_tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'tests',
+              value: '71',
+            },
+            {
+              metric: 'test_failures',
+              value: '2',
+            },
+            {
+              metric: 'skipped_tests',
+              value: '1',
+            },
+          ],
+        },
+      }),
+  )
   .expectBadge({
     label: 'tests',
     message: isCustomCompactTestTotals,
   })
 
 t.create('Total Test Count')
-  .timeout(10000)
   .get(
     '/total_tests/swellaby:azdo-shellcheck.json?server=https://sonarcloud.io',
+  )
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:azdo-shellcheck',
+        metricKeys: 'tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'tests',
+              value: '132',
+            },
+          ],
+        },
+      }),
   )
   .expectBadge({
     label: 'total tests',
@@ -126,9 +270,27 @@ t.create('Total Test Count')
   })
 
 t.create('Total Test Count (branch)')
-  .timeout(10000)
   .get(
     '/total_tests/swellaby:azdo-shellcheck/master.json?server=https://sonarcloud.io',
+  )
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:azdo-shellcheck',
+        branch: 'master',
+        metricKeys: 'tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'tests',
+              value: '132',
+            },
+          ],
+        },
+      }),
   )
   .expectBadge({
     label: 'total tests',
@@ -165,9 +327,26 @@ t.create('Total Test Count (legacy API supported)')
   })
 
 t.create('Test Failures Count')
-  .timeout(10000)
   .get(
     '/test_failures/swellaby:azdo-shellcheck.json?server=https://sonarcloud.io',
+  )
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:azdo-shellcheck',
+        metricKeys: 'test_failures',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'test_failures',
+              value: '2',
+            },
+          ],
+        },
+      }),
   )
   .expectBadge({
     label: 'test failures',
@@ -204,9 +383,26 @@ t.create('Test Failures Count (legacy API supported)')
   })
 
 t.create('Test Errors Count')
-  .timeout(10000)
   .get(
     '/test_errors/swellaby:azdo-shellcheck.json?server=https://sonarcloud.io',
+  )
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:azdo-shellcheck',
+        metricKeys: 'test_errors',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'test_errors',
+              value: '1',
+            },
+          ],
+        },
+      }),
   )
   .expectBadge({
     label: 'test errors',
@@ -243,9 +439,26 @@ t.create('Test Errors Count (legacy API supported)')
   })
 
 t.create('Skipped Tests Count')
-  .timeout(10000)
   .get(
     '/skipped_tests/swellaby:azdo-shellcheck.json?server=https://sonarcloud.io',
+  )
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:azdo-shellcheck',
+        metricKeys: 'skipped_tests',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'skipped_tests',
+              value: '1',
+            },
+          ],
+        },
+      }),
   )
   .expectBadge({
     label: 'skipped tests',
@@ -282,9 +495,26 @@ t.create('Skipped Tests Count (legacy API supported)')
   })
 
 t.create('Test Success Rate')
-  .timeout(10000)
   .get(
     '/test_success_density/swellaby:azdo-shellcheck.json?server=https://sonarcloud.io',
+  )
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:azdo-shellcheck',
+        metricKeys: 'test_success_density',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'test_success_density',
+              value: '95.5',
+            },
+          ],
+        },
+      }),
   )
   .expectBadge({
     label: 'tests',

@@ -1,5 +1,6 @@
 import { createServiceTester } from '../tester.js'
 import { isIntegerPercentage } from '../test-validators.js'
+
 export const t = await createServiceTester()
 
 // The service tests targeting the legacy SonarQube API are mocked
@@ -10,6 +11,24 @@ export const t = await createServiceTester()
 
 t.create('Coverage')
   .get('/swellaby%3Aletra.json?server=https://sonarcloud.io')
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:letra',
+        metricKeys: 'coverage',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'coverage',
+              value: '83',
+            },
+          ],
+        },
+      }),
+  )
   .expectBadge({
     label: 'coverage',
     message: isIntegerPercentage,
@@ -17,6 +36,25 @@ t.create('Coverage')
 
 t.create('Coverage (branch)')
   .get('/swellaby%3Aletra/master.json?server=https://sonarcloud.io')
+  .intercept(nock =>
+    nock('https://sonarcloud.io/api')
+      .get('/measures/component')
+      .query({
+        component: 'swellaby:letra',
+        branch: 'master',
+        metricKeys: 'coverage',
+      })
+      .reply(200, {
+        component: {
+          measures: [
+            {
+              metric: 'coverage',
+              value: '83',
+            },
+          ],
+        },
+      }),
+  )
   .expectBadge({
     label: 'coverage',
     message: isIntegerPercentage,

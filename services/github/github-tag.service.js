@@ -54,7 +54,11 @@ class GithubTag extends GithubAuthV4Service {
         parameters: [
           pathParam({ name: 'user', example: 'expressjs' }),
           pathParam({ name: 'repo', example: 'express' }),
-          pathParam({ name: 'submodule', example: 'submodule-name', required: false }),
+          pathParam({
+            name: 'submodule',
+            example: 'submodule-name',
+            required: false,
+          }),
           ...openApiQueryParams,
         ],
       },
@@ -127,7 +131,7 @@ class GithubTag extends GithubAuthV4Service {
     const limit = this.constructor.getLimit({ sort, filter })
 
     const json = await this.fetch({ user, repo, submodule, limit })
-    
+
     // Check if submodule exists
     if (submodule) {
       const submodules = json.data.repository.submodules.nodes
@@ -141,7 +145,7 @@ class GithubTag extends GithubAuthV4Service {
       tags: json.data.repository.refs.edges.map(edge => edge.node.name),
       filter,
     })
-    
+
     if (tags.length === 0) {
       const prettyMessage = filter ? 'no matching tags found' : 'no tags found'
       throw new NotFound({ prettyMessage })
@@ -167,7 +171,7 @@ const redirects = {
       base: 'github/tag',
       pattern: ':user/:repo/:submodule?',
     },
-    transformPath: ({ user, repo, submodule }) => 
+    transformPath: ({ user, repo, submodule }) =>
       `/github/v/tag/${user}/${repo}${submodule ? `/${submodule}` : ''}`,
     transformQueryParams: params => ({ sort: 'semver' }),
     dateAdded: new Date('2019-08-17'),
@@ -178,7 +182,7 @@ const redirects = {
       base: 'github/tag-pre',
       pattern: ':user/:repo/:submodule?',
     },
-    transformPath: ({ user, repo, submodule }) => 
+    transformPath: ({ user, repo, submodule }) =>
       `/github/v/tag/${user}/${repo}${submodule ? `/${submodule}` : ''}`,
     transformQueryParams: params => ({
       sort: 'semver',
@@ -192,7 +196,7 @@ const redirects = {
       base: 'github/tag-date',
       pattern: ':user/:repo/:submodule?',
     },
-    transformPath: ({ user, repo, submodule }) => 
+    transformPath: ({ user, repo, submodule }) =>
       `/github/v/tag/${user}/${repo}${submodule ? `/${submodule}` : ''}`,
     dateAdded: new Date('2019-08-17'),
   }),

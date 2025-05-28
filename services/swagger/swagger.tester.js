@@ -1,4 +1,5 @@
 import { createServiceTester } from '../tester.js'
+export const t = await createServiceTester()
 
 const getURL = '/3.0.json?specUrl=https://example.com/example.json'
 const getURLBase = '/3.0.json?specUrl='
@@ -7,7 +8,6 @@ const apiGetURL = '/validator/debug'
 const apiGetQueryParams = {
   url: 'https://example.com/example.json',
 }
-export const t = await createServiceTester()
 
 t.create('Invalid')
   .get(getURL)
@@ -32,7 +32,17 @@ t.create('Invalid')
 
 t.create('Valid json 2.0')
   .get(
-    `${getURLBase}https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v2.0/json/petstore-expanded.json`,
+    '/3.0.json?specUrl=https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v2.0/json/petstore-expanded.json',
+  )
+  .intercept(nock =>
+    nock('http://validator.swagger.io')
+      .get('/validator/debug')
+      .query({
+        url: 'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v2.0/json/petstore-expanded.json',
+      })
+      .reply(200, {
+        schemaValidationMessages: [],
+      }),
   )
   .expectBadge({
     label: 'swagger',
@@ -42,7 +52,17 @@ t.create('Valid json 2.0')
 
 t.create('Valid yaml 3.0')
   .get(
-    `${getURLBase}https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml`,
+    '/3.0.json?specUrl=https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml',
+  )
+  .intercept(nock =>
+    nock('http://validator.swagger.io')
+      .get('/validator/debug')
+      .query({
+        url: 'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml',
+      })
+      .reply(200, {
+        schemaValidationMessages: [],
+      }),
   )
   .expectBadge({
     label: 'swagger',
@@ -61,7 +81,22 @@ t.create('Valid with warnings')
 // Isn't a spec, but valid json
 t.create('Invalid')
   .get(
-    `${getURLBase}https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json`,
+    '/3.0.json?specUrl=https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json',
+  )
+  .intercept(nock =>
+    nock('http://validator.swagger.io')
+      .get('/validator/debug')
+      .query({
+        url: 'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json',
+      })
+      .reply(200, {
+        schemaValidationMessages: [
+          {
+            level: 'error',
+            message: 'Invalid schema',
+          },
+        ],
+      }),
   )
   .expectBadge({
     label: 'swagger',

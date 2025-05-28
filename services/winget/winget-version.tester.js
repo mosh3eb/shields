@@ -6,15 +6,84 @@ export const t = await createServiceTester()
 // basic test
 t.create('gets the package version of WSL')
   .get('/Microsoft.WSL.json')
+  .intercept(nock =>
+    nock('https://api.github.com/')
+      .post('/graphql')
+      .reply(200, {
+        data: {
+          repository: {
+            object: {
+              entries: [
+                {
+                  type: 'tree',
+                  name: '1.0.0',
+                  object: {
+                    entries: [
+                      {
+                        type: 'blob',
+                        name: 'Microsoft.WSL.installer.yaml',
+                      },
+                      {
+                        type: 'blob',
+                        name: 'Microsoft.WSL.locale.en-US.yaml',
+                      },
+                      {
+                        type: 'blob',
+                        name: 'Microsoft.WSL.yaml',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+  )
   .expectBadge({ label: 'winget', message: isVPlusDottedVersionNClauses })
 
 // test more than one dots
 t.create('gets the package version of .NET 8')
   .get('/Microsoft.DotNet.SDK.8.json')
+  .intercept(nock =>
+    nock('https://api.github.com/')
+      .post('/graphql')
+      .reply(200, {
+        data: {
+          repository: {
+            object: {
+              entries: [
+                {
+                  type: 'tree',
+                  name: '8.0.100',
+                  object: {
+                    entries: [
+                      {
+                        type: 'blob',
+                        name: 'Microsoft.DotNet.SDK.8.installer.yaml',
+                      },
+                      {
+                        type: 'blob',
+                        name: 'Microsoft.DotNet.SDK.8.locale.en-US.yaml',
+                      },
+                      {
+                        type: 'blob',
+                        name: 'Microsoft.DotNet.SDK.8.yaml',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+  )
   .expectBadge({ label: 'winget', message: isVPlusDottedVersionNClauses })
 
 // test sort based on dotted version order instead of ASCII
 t.create('gets the latest version')
+  .get('/Microsoft.DevHome.json')
   .intercept(nock =>
     nock('https://api.github.com/')
       .post('/graphql')
@@ -83,154 +152,13 @@ t.create('gets the latest version')
                     ],
                   },
                 },
-                {
-                  type: 'tree',
-                  name: '0.137.141.0',
-                  object: {
-                    entries: [
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.installer.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.locale.en-US.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.yaml',
-                      },
-                    ],
-                  },
-                },
-                {
-                  type: 'tree',
-                  name: '0.200.170.0',
-                  object: {
-                    entries: [
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.installer.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.locale.en-US.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.yaml',
-                      },
-                    ],
-                  },
-                },
-                {
-                  type: 'tree',
-                  name: '0.503.261.0',
-                  object: {
-                    entries: [
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.installer.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.locale.en-US.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.yaml',
-                      },
-                    ],
-                  },
-                },
-                {
-                  type: 'tree',
-                  name: '0.601.285.0',
-                  object: {
-                    entries: [
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.installer.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.locale.en-US.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.yaml',
-                      },
-                    ],
-                  },
-                },
-                {
-                  type: 'tree',
-                  name: '0.601.297.0',
-                  object: {
-                    entries: [
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.installer.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.locale.en-US.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.yaml',
-                      },
-                    ],
-                  },
-                },
-                {
-                  type: 'tree',
-                  name: '0.701.323.0',
-                  object: {
-                    entries: [
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.installer.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.locale.en-US.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.yaml',
-                      },
-                    ],
-                  },
-                },
-                {
-                  type: 'tree',
-                  name: '0.801.344.0',
-                  object: {
-                    entries: [
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.installer.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.locale.en-US.yaml',
-                      },
-                      {
-                        type: 'blob',
-                        name: 'Microsoft.DevHome.yaml',
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
         },
       }),
   )
-  .get('/Microsoft.DevHome.json')
-  .expectBadge({ label: 'winget', message: 'v0.1201.442.0' })
+  .expectBadge({ label: 'winget', message: isVPlusDottedVersionNClauses })
 
 // Both 'Some.Package' and 'Some.Package.Sub' are present in the response.
 // We should ignore 'Some.Package.Sub' in response to 'Some.Package' request.

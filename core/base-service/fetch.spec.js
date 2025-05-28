@@ -8,13 +8,17 @@ describe('Fetch implementation', function () {
   })
 
   it('should fetch text data', async function () {
-    const response = await fetchText('https://raw.githubusercontent.com/badges/shields/master/README.md')
+    const response = await fetchText(
+      'https://raw.githubusercontent.com/badges/shields/master/README.md',
+    )
     expect(response).to.be.a('string')
     expect(response).to.include('shields.io')
   })
 
   it('should fetch binary data', async function () {
-    const response = await fetchBuffer('https://raw.githubusercontent.com/badges/shields/master/readme-logo.svg')
+    const response = await fetchBuffer(
+      'https://raw.githubusercontent.com/badges/shields/master/readme-logo.svg',
+    )
     expect(response).to.be.an('ArrayBuffer')
   })
 
@@ -28,4 +32,4 @@ describe('Fetch implementation', function () {
       expect(error.statusCode).to.equal(404)
     }
   })
-}) 
+})
